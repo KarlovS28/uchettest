@@ -10,7 +10,16 @@ import { User } from "@shared/schema";
 declare global {
   namespace Express {
     // Расширяем типы Express
-    interface User extends Omit<User, 'password'> {}
+    interface User {
+      id: number;
+      username: string;
+      fullName: string;
+      position: string;
+      organizationId: number;
+      role: string;
+      permissions: string[];
+      createdAt: Date;
+    }
   }
 }
 

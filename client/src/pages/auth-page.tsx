@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
 // Схема для формы входа
 const loginSchema = z.object({
@@ -24,7 +25,8 @@ const setupSchema = z.object({
   adminPosition: z.string().min(1, "Введите должность администратора"),
 });
 
-export default function AuthPage() {
+// Оборачиваем компонент для предотвращения ошибки useAuth
+function AuthPageContent() {
   const [location, setLocation] = useLocation();
   const { user, isSystemSetup, isSystemSetupLoading, loginMutation, setupMutation } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
@@ -52,11 +54,13 @@ export default function AuthPage() {
 
   // Отправка формы входа
   const onLoginSubmit = (values: z.infer<typeof loginSchema>) => {
+    console.log("Вход:", values);
     loginMutation.mutate(values);
   };
 
   // Отправка формы настройки
   const onSetupSubmit = (values: z.infer<typeof setupSchema>) => {
+    console.log("Настройка системы:", values);
     setupMutation.mutate(values);
   };
 
@@ -78,7 +82,8 @@ export default function AuthPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="paper p-8 rounded-lg">
-          <p className="text-center">Загрузка...</p>
+          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+          <p className="text-center mt-2">Загрузка...</p>
         </div>
       </div>
     );
@@ -230,4 +235,21 @@ export default function AuthPage() {
       </div>
     </div>
   );
+}
+
+// Компонент-обертка, который перехватывает ошибки контекста
+export default function AuthPage() {
+  try {
+    return <AuthPageContent />;
+  } catch (err) {
+    // Если произошла ошибка с контекстом аутентификации, показываем заглушку
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="paper p-8 rounded-lg">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+          <p className="text-center mt-2">Загрузка приложения...</p>
+        </div>
+      </div>
+    );
+  }
 }

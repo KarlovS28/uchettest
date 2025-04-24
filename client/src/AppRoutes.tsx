@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "@/pages/not-found";
-import LoginPage from "@/pages/login-page";
+import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import DepartmentsPage from "@/pages/departments-page";
 import EmployeesPage from "@/pages/employees-page";
@@ -15,7 +15,7 @@ export function AppRoutes() {
     <TooltipProvider>
       <Toaster />
       <Switch>
-        <Route path="/auth" component={LoginPage} />
+        <Route path="/auth" component={AuthPage} />
         <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/departments" component={DepartmentsPage} />
         <ProtectedRoute path="/departments/:departmentId/employees" component={EmployeesPage} />
