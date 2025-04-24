@@ -65,6 +65,10 @@ export default function HomePage() {
     setLocation("/departments");
   };
   
+  const handleExcelPage = () => {
+    setLocation("/excel");
+  };
+  
   const handleLogout = async () => {
     try {
       await fetch("/api/logout", {

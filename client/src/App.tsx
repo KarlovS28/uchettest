@@ -9,6 +9,7 @@ import DepartmentsPage from "@/pages/departments-page";
 import EmployeesPage from "@/pages/employees-page";
 import EmployeeDetailsPage from "@/pages/employee-details-page";
 import EmployeeFormPage from "@/pages/employee-form-page";
+import ExcelPage from "@/pages/excel-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { useAuth } from "./hooks/use-auth";
 import { Loader2 } from "lucide-react";
@@ -25,6 +26,7 @@ function AppRoutes() {
       <ProtectedRoute path="/employees/:employeeId" component={EmployeeDetailsPage} />
       <ProtectedRoute path="/employees/new" component={EmployeeFormPage} />
       <ProtectedRoute path="/employees/:employeeId/edit" component={EmployeeFormPage} />
+      <ProtectedRoute path="/excel" component={ExcelPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -13,6 +13,7 @@ import {
   userPermissionsSchema
 } from "@shared/schema";
 import multer from "multer";
+import * as XLSX from "xlsx";
 
 // Вспомогательная функция для проверки разрешений пользователя
 function checkPermission(req: Request, permission: string): boolean {
@@ -521,6 +522,276 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // **************** Экспорт и импорт данных ****************
+  
+  // Используем уже импортированный XLSX
+  const upload = multer({ dest: 'uploads/' });
+  
+  // Импорт списка сотрудников из Excel
+  app.post("/api/import/employees", upload.single("file"), async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Требуется авторизация" });
+    }
+    
+    if (!checkPermission(req, "manage_employees")) {
+      return res.status(403).json({ error: "Недостаточно прав" });
+    }
+    
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Файл не загружен" });
+      }
+      
+      // Чтение файла Excel
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      
+      // Валидация и преобразование данных
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+      
+      // @ts-ignore - тип User не включает organizationId из типа в схеме
+      const organizationId = req.user.organizationId;
+      
+      // Обработка каждой строки
+      for (const row of data) {
+        try {
+          // Преобразуем даты из строк в объекты Date
+          let hireDate;
+          let birthDate;
+          
+          try {
+            hireDate = new Date(row.hireDate || row.ДатаПриема);
+            if (isNaN(hireDate.getTime())) {
+              hireDate = new Date(); // Если не удалось преобразовать, используем текущую дату
+            }
+          } catch (e) {
+            hireDate = new Date();
+          }
+          
+          try {
+            birthDate = new Date(row.birthDate || row.ДатаРождения);
+            if (isNaN(birthDate.getTime())) {
+              birthDate = new Date(1980, 0, 1); // Дата по умолчанию
+            }
+          } catch (e) {
+            birthDate = new Date(1980, 0, 1);
+          }
+          
+          const employeeData = {
+            fullName: row.fullName || row.ФИО || "",
+            position: row.position || row.Должность || "",
+            departmentId: parseInt(String(row.departmentId || row.ОтделИд || "0")),
+            hireDate: hireDate,
+            hireOrderNumber: String(row.hireOrderNumber || row.НомерПриказа || ""),
+            passport: String(row.passport || row.Паспорт || ""),
+            birthDate: birthDate,
+            address: String(row.address || row.Адрес || ""),
+            phone: String(row.phone || row.Телефон || ""),
+            materialLiabilityType: String(row.materialLiabilityType || row.ТипМатОтветственности || "none"),
+            materialLiabilityDocument: null,
+            organizationId: organizationId,
+            dismissed: false,
+            dismissalDate: null,
+            dismissalOrderNumber: null,
+            photo: null
+          };
+
+          // Проверка обязательных полей
+          if (!employeeData.fullName || !employeeData.position || !employeeData.departmentId) {
+            results.failed++;
+            results.errors.push(`Строка ${results.success + results.failed}: Не указаны обязательные поля`);
+            continue;
+          }
+
+          // Создание сотрудника
+          await storage.createEmployee(employeeData);
+          results.success++;
+        } catch (error) {
+          results.failed++;
+          results.errors.push(`Строка ${results.success + results.failed}: ${error}`);
+        }
+      }
+      
+      res.json(results);
+    } catch (error) {
+      console.error("Ошибка при импорте сотрудников:", error);
+      res.status(500).json({ error: "Ошибка при импорте сотрудников" });
+    }
+  });
+  
+  // Импорт списка инвентаря из Excel
+  app.post("/api/import/inventory", upload.single("file"), async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Требуется авторизация" });
+    }
+    
+    if (!checkPermission(req, "manage_liability")) {
+      return res.status(403).json({ error: "Недостаточно прав" });
+    }
+    
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Файл не загружен" });
+      }
+      
+      // Чтение файла Excel
+      const workbook = XLSX.readFile(req.file.path);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      
+      // Результаты импорта
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as string[]
+      };
+      
+      // @ts-ignore - тип User не включает organizationId из типа в схеме
+      const organizationId = req.user.organizationId;
+      
+      // Обработка каждой строки
+      for (const row of data) {
+        try {
+          const inventoryData = {
+            name: String(row.name || row.Наименование || ""),
+            inventoryNumber: String(row.inventoryNumber || row.ИнвентарныйНомер || ""),
+            description: String(row.description || row.Описание || ""),
+            cost: parseInt(String(row.cost || row.value || row.Стоимость || "0")),
+            employeeId: parseInt(String(row.employeeId || row.СотрудникИд || "0")),
+            departmentId: parseInt(String(row.departmentId || row.ОтделИд || "0")),
+            organizationId: organizationId
+          };
+
+          // Проверка обязательных полей
+          if (!inventoryData.name || (!inventoryData.employeeId && !inventoryData.departmentId)) {
+            results.failed++;
+            results.errors.push(`Строка ${results.success + results.failed}: Не указаны обязательные поля`);
+            continue;
+          }
+
+          // Создание записи инвентаря
+          await storage.createInventoryItem(inventoryData);
+          results.success++;
+        } catch (error) {
+          results.failed++;
+          results.errors.push(`Строка ${results.success + results.failed}: ${error}`);
+        }
+      }
+      
+      res.json(results);
+    } catch (error) {
+      console.error("Ошибка при импорте инвентаря:", error);
+      res.status(500).json({ error: "Ошибка при импорте инвентаря" });
+    }
+  });
+  
+  // Экспорт списка сотрудников в Excel
+  app.get("/api/export/employees", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Требуется авторизация" });
+    }
+    
+    try {
+      // @ts-ignore - тип User не включает organizationId из типа в схеме
+      const organizationId = req.user.organizationId;
+      let departmentId = undefined;
+      
+      if (req.query.departmentId) {
+        departmentId = parseInt(req.query.departmentId as string);
+      }
+      
+      // Получаем список сотрудников
+      const employees = await storage.getEmployees(organizationId, departmentId);
+      
+      // Преобразуем для экспорта
+      const exportData = employees.map(employee => ({
+        'ФИО': employee.fullName,
+        'Должность': employee.position,
+        'Отдел (ID)': employee.departmentId,
+        'Дата приема': employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : '',
+        'Номер приказа': employee.hireOrderNumber,
+        'Паспорт': employee.passport,
+        'Дата рождения': employee.birthDate ? new Date(employee.birthDate).toLocaleDateString() : '',
+        'Адрес': employee.address,
+        'Телефон': employee.phone,
+        'Тип мат. ответственности': employee.materialLiabilityType,
+        'Статус': employee.dismissed ? 'Уволен' : 'Работает',
+        'Дата увольнения': employee.dismissalDate ? new Date(employee.dismissalDate).toLocaleDateString() : ''
+      }));
+      
+      // Создаем Excel файл
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Сотрудники");
+      
+      // Отправляем файл
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=employees.xlsx');
+      
+      // Создаем бинарные данные и отправляем
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Ошибка при экспорте сотрудников:", error);
+      res.status(500).json({ error: "Ошибка при экспорте сотрудников" });
+    }
+  });
+  
+  // Экспорт списка инвентаря в Excel
+  app.get("/api/export/inventory", async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Требуется авторизация" });
+    }
+    
+    try {
+      let items = [];
+      
+      // Получение имущества по сотруднику или отделу
+      if (req.query.employeeId) {
+        const employeeId = parseInt(req.query.employeeId as string);
+        items = await storage.getInventoryItems(employeeId);
+      } else if (req.query.departmentId) {
+        const departmentId = parseInt(req.query.departmentId as string);
+        items = await storage.getInventoryItemsByDepartment(departmentId);
+      } else {
+        return res.status(400).json({ error: "Требуется указать employeeId или departmentId" });
+      }
+      
+      // Преобразуем для экспорта
+      const exportData = items.map(item => ({
+        'Наименование': item.name,
+        'Инвентарный номер': item.inventoryNumber,
+        'Стоимость': item.cost,
+        'Сотрудник (ID)': item.employeeId,
+        'Отдел (ID)': item.departmentId,
+        'Описание': item.description || ''
+      }));
+      
+      // Создаем Excel файл
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Инвентарь");
+      
+      // Отправляем файл
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=inventory.xlsx');
+      
+      // Создаем бинарные данные и отправляем
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Ошибка при экспорте инвентаря:", error);
+      res.status(500).json({ error: "Ошибка при экспорте инвентаря" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
