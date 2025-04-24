@@ -63,9 +63,9 @@ export default function SetupPage() {
         description: "Вы будете перенаправлены на страницу входа",
       });
       
-      // Обновляем страницу для перезагрузки приложения
+      // Перенаправляем на страницу входа
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = "/auth";
       }, 1500);
     } catch (error) {
       console.error("Ошибка при настройке системы:", error);

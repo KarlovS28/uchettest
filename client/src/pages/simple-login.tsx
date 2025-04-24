@@ -83,8 +83,15 @@ export default function SimpleLogin() {
         description: `Добро пожаловать, ${user.fullName}!`,
       });
       
-      // Перенаправляем на главную
-      window.location.href = "/";
+      // Перенаправляем на главную через 1 секунду
+      toast({
+        title: "Перенаправление",
+        description: "Вы будете перенаправлены на главную страницу",
+      });
+      
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
       console.error("Ошибка при входе:", error);
       toast({
