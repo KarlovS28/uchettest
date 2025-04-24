@@ -9,11 +9,8 @@ import EmployeesPage from "@/pages/employees-page";
 import EmployeeDetailsPage from "@/pages/employee-details-page";
 import EmployeeFormPage from "@/pages/employee-form-page";
 import { ProtectedRoute } from "./lib/protected-route";
-import { useAuth } from "./hooks/use-auth";
 
 function Router() {
-  const { user } = useAuth();
-  
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
