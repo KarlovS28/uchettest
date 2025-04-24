@@ -16,7 +16,9 @@ export function ProtectedRoute({
     // Проверяем, авторизован ли пользователь
     const checkAuth = async () => {
       try {
-        const response = await fetch("/api/user");
+        const response = await fetch("/api/user", {
+          credentials: "include", // Важно для чтения cookie сессии
+        });
         setIsAuthenticated(response.ok);
       } catch (error) {
         console.error("Ошибка при проверке авторизации:", error);

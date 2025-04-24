@@ -68,6 +68,7 @@ export default function SimpleLogin() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Важно для сохранения cookie сессии
         body: JSON.stringify(values),
       });
       

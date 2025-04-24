@@ -30,14 +30,18 @@ export default function HomePage() {
     // Получаем данные текущего пользователя
     const fetchUserData = async () => {
       try {
-        const userResponse = await fetch("/api/user");
+        const userResponse = await fetch("/api/user", {
+          credentials: "include", // Важно для чтения cookie сессии
+        });
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUser(userData);
           
           // Получаем данные организации
           if (userData.organizationId) {
-            const orgResponse = await fetch(`/api/organizations/${userData.organizationId}`);
+            const orgResponse = await fetch(`/api/organizations/${userData.organizationId}`, {
+              credentials: "include",
+            });
             if (orgResponse.ok) {
               const orgData = await orgResponse.json();
               setOrganization(orgData);
@@ -65,6 +69,7 @@ export default function HomePage() {
     try {
       await fetch("/api/logout", {
         method: "POST",
+        credentials: "include",
       });
       // После успешного выхода перенаправляем на страницу входа
       window.location.href = "/auth";

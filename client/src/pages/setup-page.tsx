@@ -47,6 +47,7 @@ export default function SetupPage() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Важно для сохранения cookie сессии
         body: JSON.stringify(values),
       });
       
