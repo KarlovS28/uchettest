@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Основные цвета и переменные */
+:root {
+  /* Основные цвета */
+  --background: 38 42% 88%;
+  --foreground: 187 29% 25%;
+  --muted: 34 9% 95%;
+  --muted-foreground: 37 13% 45%;
+  --popover: 38 42% 88%;
+  --popover-foreground: 187 29% 25%;
+  --card: 38 42% 88%;
+  --card-foreground: 187 29% 25%;
+  --border: 37 20% 70%;
+  --input: 37 20% 70%;
+  --primary: 35 33% 55%;
+  --primary-foreground: 35 40% 98%;
+  --secondary: 34 9% 95%;
+  --secondary-foreground: 187 29% 25%;
+  --accent: 35 33% 55%;
+  --accent-foreground: 187 29% 25%;
+  --destructive: 0 65% 30%;
+  --destructive-foreground: 35 40% 98%;
+  --ring: 187 29% 25%;
+  --radius: 0.3rem;
+
+  /* Дополнительные цвета для диаграмм */
+  --chart-1: 35 33% 55%;
+  --chart-2: 187 29% 25%;
+  --chart-3: 16 65% 40%;
+  --chart-4: 212 45% 40%;
+  --chart-5: 155 40% 30%;
+
+  /* Sidebar цвета */
+  --sidebar-background: 35 33% 35%;
+  --sidebar-foreground: 35 40% 98%;
+  --sidebar-primary: 35 33% 55%;
+  --sidebar-primary-foreground: 35 40% 98%;
+  --sidebar-accent: 35 33% 45%;
+  --sidebar-accent-foreground: 35 40% 98%;
+  --sidebar-border: 35 33% 30%;
+  --sidebar-ring: 35 40% 90%;
+}
+
+/* Основные стили */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-serif antialiased bg-background text-foreground;
+    background-image: url('https://images.unsplash.com/photo-1551909496-d9d4a69d4acd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-playfair;
+  }
+}
+
+/* Компоненты в стиле "старого документа" */
+@layer components {
+  .paper {
+    @apply bg-card/90 rounded shadow-md border border-primary;
+  }
+
+  .vintage-input {
+    @apply border-0 border-b border-primary/80 bg-white/50 focus:ring-0 focus:border-primary;
+  }
+
+  .vintage-button {
+    @apply bg-primary text-primary-foreground border border-primary-foreground/20 
+           hover:bg-primary-foreground hover:text-primary transition-colors;
+  }
+
+  .vintage-table {
+    @apply border-collapse w-full;
+  }
+
+  .vintage-table th {
+    @apply bg-primary/30 px-4 py-2 border border-primary;
+  }
+
+  .vintage-table td {
+    @apply px-4 py-2 border border-primary;
+  }
+
+  .vintage-table tr:nth-child(even) {
+    @apply bg-primary/10;
+  }
+
+  .vintage-divider {
+    @apply h-px my-4 bg-gradient-to-r from-transparent via-primary/70 to-transparent;
+  }
+
+  .stamp {
+    @apply absolute w-24 h-24 border-2 border-destructive rounded-full 
+           flex items-center justify-center text-destructive font-playfair 
+           rotate-[-15deg] opacity-70;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary-foreground));
+}
