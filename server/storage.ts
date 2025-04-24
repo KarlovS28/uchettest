@@ -3,9 +3,27 @@ import {
   Employee, InsertEmployee, InventoryItem, InsertInventoryItem,
   Organization, InsertOrganization, EmployeeDocument, InsertEmployeeDocument
 } from "@shared/schema";
+import express from "express";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+import {
+  organizations as organizationsTable,
+  users as usersTable,
+  departments as departmentsTable,
+  employees as employeesTable,
+  employeeDocuments as employeeDocumentsTable,
+  inventoryItems as inventoryItemsTable,
+} from "@shared/schema";
+import { pool } from "./db";
 
 // Интерфейс хранилища данных
 export interface IStorage {
+  // Сессии
+  sessionStore: session.Store;
+  
   // Организации
   getOrganization(id: number): Promise<Organization | undefined>;
   createOrganization(organization: InsertOrganization): Promise<Organization>;
@@ -53,7 +71,293 @@ export interface IStorage {
   }[]>;
 }
 
-// Реализация хранилища в памяти
+// Реализация хранилища на базе данных PostgreSQL
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+  }
+
+  // Организации
+  async getOrganization(id: number): Promise<Organization | undefined> {
+    const [organization] = await db
+      .select()
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, id));
+    return organization;
+  }
+
+  async createOrganization(organization: InsertOrganization): Promise<Organization> {
+    const [newOrg] = await db
+      .insert(organizationsTable)
+      .values({
+        ...organization,
+        createdAt: new Date(),
+      })
+      .returning();
+    return newOrg;
+  }
+
+  // Пользователи
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db
+      .insert(usersTable)
+      .values({
+        ...user,
+        createdAt: new Date(),
+      })
+      .returning();
+    return newUser;
+  }
+
+  async getUsers(organizationId: number): Promise<User[]> {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.organizationId, organizationId));
+    return users;
+  }
+
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(usersTable)
+      .set(userData)
+      .where(eq(usersTable.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  // Отделы
+  async getDepartment(id: number): Promise<Department | undefined> {
+    const [department] = await db
+      .select()
+      .from(departmentsTable)
+      .where(eq(departmentsTable.id, id));
+    return department;
+  }
+
+  async getDepartments(organizationId: number): Promise<Department[]> {
+    const departments = await db
+      .select()
+      .from(departmentsTable)
+      .where(eq(departmentsTable.organizationId, organizationId));
+    return departments;
+  }
+
+  async createDepartment(department: InsertDepartment): Promise<Department> {
+    const [newDept] = await db
+      .insert(departmentsTable)
+      .values({
+        ...department,
+        createdAt: new Date(),
+      })
+      .returning();
+    return newDept;
+  }
+
+  async updateDepartment(id: number, departmentData: Partial<Department>): Promise<Department | undefined> {
+    const [updatedDept] = await db
+      .update(departmentsTable)
+      .set(departmentData)
+      .where(eq(departmentsTable.id, id))
+      .returning();
+    return updatedDept;
+  }
+
+  async deleteDepartment(id: number): Promise<boolean> {
+    const result = await db
+      .delete(departmentsTable)
+      .where(eq(departmentsTable.id, id));
+    return true; // В drizzle нет прямого способа узнать количество удаленных строк
+  }
+
+  // Сотрудники
+  async getEmployee(id: number): Promise<Employee | undefined> {
+    const [employee] = await db
+      .select()
+      .from(employeesTable)
+      .where(eq(employeesTable.id, id));
+    return employee;
+  }
+
+  async getEmployees(organizationId: number, departmentId?: number): Promise<Employee[]> {
+    if (departmentId) {
+      return db
+        .select()
+        .from(employeesTable)
+        .where(
+          and(
+            eq(employeesTable.organizationId, organizationId),
+            eq(employeesTable.departmentId, departmentId)
+          )
+        );
+    } else {
+      return db
+        .select()
+        .from(employeesTable)
+        .where(eq(employeesTable.organizationId, organizationId));
+    }
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    const [newEmployee] = await db
+      .insert(employeesTable)
+      .values({
+        ...employee,
+        createdAt: new Date(),
+        dismissed: false,
+        dismissalDate: null,
+        dismissalOrderNumber: null,
+        photo: null,
+      })
+      .returning();
+    return newEmployee;
+  }
+
+  async updateEmployee(id: number, employeeData: Partial<Employee>): Promise<Employee | undefined> {
+    const [updatedEmployee] = await db
+      .update(employeesTable)
+      .set(employeeData)
+      .where(eq(employeesTable.id, id))
+      .returning();
+    return updatedEmployee;
+  }
+
+  async dismissEmployee(id: number, dismissalDate: Date, dismissalOrderNumber: string): Promise<Employee | undefined> {
+    const [dismissedEmployee] = await db
+      .update(employeesTable)
+      .set({
+        dismissed: true,
+        dismissalDate,
+        dismissalOrderNumber,
+      })
+      .where(eq(employeesTable.id, id))
+      .returning();
+    return dismissedEmployee;
+  }
+
+  // Документы сотрудников
+  async getEmployeeDocuments(employeeId: number): Promise<EmployeeDocument[]> {
+    const documents = await db
+      .select()
+      .from(employeeDocumentsTable)
+      .where(eq(employeeDocumentsTable.employeeId, employeeId));
+    return documents;
+  }
+
+  async addEmployeeDocument(document: InsertEmployeeDocument): Promise<EmployeeDocument> {
+    const [newDocument] = await db
+      .insert(employeeDocumentsTable)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async deleteEmployeeDocument(id: number): Promise<boolean> {
+    await db
+      .delete(employeeDocumentsTable)
+      .where(eq(employeeDocumentsTable.id, id));
+    return true;
+  }
+
+  // Имущество
+  async getInventoryItem(id: number): Promise<InventoryItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(inventoryItemsTable)
+      .where(eq(inventoryItemsTable.id, id));
+    return item;
+  }
+
+  async getInventoryItems(employeeId: number): Promise<InventoryItem[]> {
+    const items = await db
+      .select()
+      .from(inventoryItemsTable)
+      .where(eq(inventoryItemsTable.employeeId, employeeId));
+    return items;
+  }
+
+  async getInventoryItemsByDepartment(departmentId: number): Promise<InventoryItem[]> {
+    const items = await db
+      .select()
+      .from(inventoryItemsTable)
+      .where(eq(inventoryItemsTable.departmentId, departmentId));
+    return items;
+  }
+
+  async createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem> {
+    const [newItem] = await db
+      .insert(inventoryItemsTable)
+      .values({
+        ...item,
+        createdAt: new Date(),
+      })
+      .returning();
+    return newItem;
+  }
+
+  async updateInventoryItem(id: number, itemData: Partial<InventoryItem>): Promise<InventoryItem | undefined> {
+    const [updatedItem] = await db
+      .update(inventoryItemsTable)
+      .set(itemData)
+      .where(eq(inventoryItemsTable.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteInventoryItem(id: number): Promise<boolean> {
+    await db
+      .delete(inventoryItemsTable)
+      .where(eq(inventoryItemsTable.id, id));
+    return true;
+  }
+
+  // Статистика
+  async getDepartmentStats(organizationId: number): Promise<{
+    departmentId: number;
+    departmentName: string;
+    employeeCount: number;
+    inventoryCount: number;
+  }[]> {
+    const departments = await this.getDepartments(organizationId);
+    
+    // Для каждого департамента находим количество сотрудников и инвентаря
+    return Promise.all(departments.map(async (dept) => {
+      const employees = await this.getEmployees(organizationId, dept.id);
+      const inventory = await this.getInventoryItemsByDepartment(dept.id);
+      
+      return {
+        departmentId: dept.id,
+        departmentName: dept.name,
+        employeeCount: employees.length,
+        inventoryCount: inventory.length,
+      };
+    }));
+  }
+}
+
+// Реализация MemStorage для поддержки обратной совместимости
 export class MemStorage implements IStorage {
   private organizations: Map<number, Organization>;
   private users: Map<number, User>;
@@ -68,6 +372,8 @@ export class MemStorage implements IStorage {
   private employeeId: number;
   private documentId: number;
   private inventoryId: number;
+  
+  sessionStore: session.Store;
 
   constructor() {
     this.organizations = new Map();
@@ -83,6 +389,11 @@ export class MemStorage implements IStorage {
     this.employeeId = 1;
     this.documentId = 1;
     this.inventoryId = 1;
+    
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // Очищать устаревшие сессии каждые 24 часа
+    });
   }
 
   // Организации
@@ -183,7 +494,7 @@ export class MemStorage implements IStorage {
       (employee) => {
         if (departmentId) {
           return employee.organizationId === organizationId && 
-                 employee.departmentId === departmentId;
+                employee.departmentId === departmentId;
         }
         return employee.organizationId === organizationId;
       }
@@ -198,6 +509,7 @@ export class MemStorage implements IStorage {
       dismissed: false,
       dismissalDate: null,
       dismissalOrderNumber: null,
+      photo: null,
       createdAt: new Date() 
     };
     this.employees.set(id, newEmployee);
@@ -316,4 +628,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Используем хранилище на основе базы данных
+export const storage = new DatabaseStorage();
