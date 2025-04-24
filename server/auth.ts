@@ -6,13 +6,11 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User } from "@shared/schema";
-import createMemoryStore from "memorystore";
-
-const MemoryStore = createMemoryStore(session);
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Расширяем типы Express
+    interface User extends Omit<User, 'password'> {}
   }
 }
 
@@ -32,15 +30,11 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const sessionStore = new MemoryStore({
-    checkPeriod: 86400000, // Очистка истекших сессий раз в сутки
-  });
-
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dela-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: storage.sessionStore,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 день
     },
@@ -65,7 +59,7 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user: any, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -118,13 +112,16 @@ export function setupAuth(app: Express) {
         });
       });
     } catch (error) {
+      console.error("Ошибка при настройке системы:", error);
       res.status(500).json({ error: "Не удалось настроить систему" });
     }
   });
 
   // Маршрут для входа в систему
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+    // Скрываем пароль из ответа
+    const userWithoutPassword = { ...req.user, password: undefined };
+    res.status(200).json(userWithoutPassword);
   });
 
   // Маршрут для выхода из системы
@@ -138,18 +135,22 @@ export function setupAuth(app: Express) {
   // Маршрут для получения текущего пользователя
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    
+    // Скрываем пароль из ответа
+    const userWithoutPassword = { ...req.user, password: undefined };
+    res.json(userWithoutPassword);
   });
 
   // Проверка, настроена ли система
   app.get("/api/system-status", async (req, res) => {
     try {
       // Проверяем, есть ли уже организации в системе
-      const organizations = await storage.getDepartments(1);
-      const isSetup = organizations.length > 0;
+      const organizations = await storage.getOrganization(1);
+      const isSetup = !!organizations;
       
       res.json({ isSetup });
     } catch (error) {
+      console.error("Ошибка при проверке статуса системы:", error);
       res.status(500).json({ error: "Не удалось проверить статус системы" });
     }
   });
