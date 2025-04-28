@@ -5,12 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="18413296-ccf0-4810-a79d-4af49256a2bb" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/qodana.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/.env" beforeDir="false" afterPath="$PROJECT_DIR$/server/.env" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,13 +26,30 @@
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
       <list>
+        <option value="sergeykarlov483 &lt;41880851-sergeykarlov483@users.noreply.replit.com&gt;" />
         <option value="https://github.com/KarlovS28\" />
         <option value="https://github.com/KarlovS28" />
       </list>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "KarlovS28"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/KarlovS28/uchet",
+    "accountId": "80631c03-cad4-4985-8655-e3d1e494417e"
+  }
+}]]></component>
+  <component name="PhpDebugGeneral" listening_started="true" />
   <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -45,17 +60,19 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Node.js.db.ts.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Applications/MAMP/htdocs/ImushchiestviennyiUchiet",
+    "last_opened_file_path": "/Applications/MAMP/htdocs/Uchet",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
-    "ts.external.directory.path": "/Applications/MAMP/htdocs/ImushchiestviennyiUchiet/node_modules/typescript/lib",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "settings.qodana",
+    "ts.external.directory.path": "/Applications/MAMP/htdocs/Uchet/node_modules/typescript/lib",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -65,6 +82,23 @@
     ]
   }
 }]]></component>
+  <component name="QodanaHighlightedReportService">
+    <option name="localRunNotPublishedPersistedInfo">
+      <LocalReportPersistedInfo>
+        <option name="path" value="/private/var/folders/2m/cz1wx77d2x18337yj6_gbk2r0000gn/T/qodana_output/qodana.sarif.json" />
+        <option name="reportGuid" value="693d25e2-bbe6-4f3a-9787-9205320a4e2f" />
+        <option name="reportName" value="Uchet/qodana/2025-04-28" />
+      </LocalReportPersistedInfo>
+    </option>
+  </component>
+  <component name="QodanaIsSelectedPersistenceService">
+    <option name="selectedOrLoading" value="true" />
+  </component>
+  <component name="QodanaReportsService">
+    <option name="descriptions">
+      <ReportDescription localRun="true" path="/private/var/folders/2m/cz1wx77d2x18337yj6_gbk2r0000gn/T/qodana_output/qodana.sarif.json" reportGuid="693d25e2-bbe6-4f3a-9787-9205320a4e2f" reportId="Uchet/qodana/2025-04-28" />
+    </option>
+  </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/server" />
@@ -89,12 +123,26 @@
       <workItem from="1745492012143" duration="982000" />
       <workItem from="1745495169978" duration="355000" />
       <workItem from="1745495908085" duration="2610000" />
-      <workItem from="1745576797850" duration="12201000" />
+      <workItem from="1745576797850" duration="12502000" />
+      <workItem from="1745762385113" duration="6825000" />
     </task>
+    <task id="LOCAL-00001" summary="Enable users to import and export data using Excel spreadsheets&#10;&#10;Implements Excel import/export functionality for employees via XLSX and file-saver libraries, adding new route and components.&#10;&#10;Replit-Commit-Author: Agent&#10;Replit-Commit-Session-Id: ad3c812c-fefe-4914-b179-7b677ffb16cb&#10;Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/0d4cf05d-193d-4454-be8f-ca87a07cb1fb/04bcb33c-01b3-4954-91aa-cbb7c95ad8af.jpg">
+      <option name="closed" value="true" />
+      <created>1745762069355</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1745762069355</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Enable users to import and export data using Excel spreadsheets&#10;&#10;Implements Excel import/export functionality for employees via XLSX and file-saver libraries, adding new route and components.&#10;&#10;Replit-Commit-Author: Agent&#10;Replit-Commit-Session-Id: ad3c812c-fefe-4914-b179-7b677ffb16cb&#10;Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/0d4cf05d-193d-4454-be8f-ca87a07cb1fb/04bcb33c-01b3-4954-91aa-cbb7c95ad8af.jpg" />
+    <option name="LAST_COMMIT_MESSAGE" value="Enable users to import and export data using Excel spreadsheets&#10;&#10;Implements Excel import/export functionality for employees via XLSX and file-saver libraries, adding new route and components.&#10;&#10;Replit-Commit-Author: Agent&#10;Replit-Commit-Session-Id: ad3c812c-fefe-4914-b179-7b677ffb16cb&#10;Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/0d4cf05d-193d-4454-be8f-ca87a07cb1fb/04bcb33c-01b3-4954-91aa-cbb7c95ad8af.jpg" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
