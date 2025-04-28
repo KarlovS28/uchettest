@@ -7,7 +7,7 @@ import express from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
-import { db } from "./db";
+import { db, pool } from "./db.ts";
 import { eq, and } from "drizzle-orm";
 import {
   organizations as organizationsTable,
